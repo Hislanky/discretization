@@ -490,10 +490,13 @@ if __name__ == "__main__":
         print('Temps discrétisation : {} secondes'.format(time.time()-time_try2))
         print('** Ecriture en cours **')     
     finally:
-        ind = int(indice_z/2)
-        arr = M3D[ind]
+        
+        arr_tmp = M3D.transpose(1,2,0)
+        ind = int(M3D.shape[2]/2)
+        arr = M3D[:,:,ind]
         plt.imshow(arr)
         plt.show()
+
         pass
 
     time_try3 = time.time()
