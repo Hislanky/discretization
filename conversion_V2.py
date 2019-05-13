@@ -19,14 +19,70 @@ def arguments():
     parser.add_argument("Space_step",help="""Step for space discretization in µm""")
     return parser.parse_args()
 
-# EXTRACTION TRIANGLE NOMBRE FROM STL *SIMPLIFIED*
-def stl(data_file):
+# EXTRACTION TRIANGLE NOMBRE FROM STL
+def stl_nb(data_file):
     directory = os.path.dirname(__file__)
     path = os.path.join(directory, "texture_stl",data_file)
-    texture = open(path,"r")
-    stl = texture.readlines()
+    texture = open(path,"rb")
+    texture.seek(80,0)
+    nb_triangles = int.from_bytes(texture.read(4), 'little')
     texture.close()
-    return stl
+    return nb_triangles
+
+# EXTRACTION TRIANGLE COORDINATE FROM STL
+def stl_analysis(data_file):
+    directory = os.path.dirname(__file__)
+    path = os.path.join(directory, "texture_stl",data_file)
+    texture = open(path,"rb")
+    texture.seek(84,0)
+    # Liste des coordonnées des sommets des triangles [x,y,z,x,y,z...x,y,z]
+    triangles = list()
+    paring_range = 0
+    while paring_range < nb_triangles :
+        sommets = 0
+        # passer/(stocker) les 12 octets de la direction normale
+        texture.seek(12,1)
+        # coordonnees des sommets {X;Y;Z}
+        while sommets < 3 :
+            x = struct.unpack('f', texture.read(4))
+            x = x[0]
+            y = struct.unpack('f', texture.read(4))                    
+            y =y[0]
+            z = struct.unpack('f', texture.read(4))
+            z = z[0]
+            triangles.extend([x,y,z])
+            sommets += 1
+        # passer les 2 octets de control
+        texture.seek(2,1)
+        paring_range += 1
+    texture.close()
+    return triangles
+
+# EXTRACTION TRIANGLE COORDINATE FROM STL
+def stl_normal(data_file):
+    directory = os.path.dirname(__file__)
+    path = os.path.join(directory, "texture_stl",data_file)
+    texture = open(path,"rb")
+    texture.seek(84,0)
+    # Liste des normales des triangles [Nx,Ny,Nz,Nx,Ny,Nz...Nx,Ny,Nz]
+    normal_triangles = list()
+    paring_range = 0
+    while paring_range < nb_triangles :
+        # passer/(stocker) les 12 octets de la direction normale
+        Nx = struct.unpack('f', texture.read(4))
+        Nx = Nx[0]
+        Ny = struct.unpack('f', texture.read(4))                    
+        Ny = Ny[0]
+        Nz = struct.unpack('f', texture.read(4))
+        Nz = Nz[0]
+        normal_triangles.extend([Nx,Ny,Nz])
+        # passer les 12*3 octets de coordonnees des sommets
+        texture.seek(36,1)
+        # passer les 2 octets de control
+        texture.seek(2,1)
+        paring_range += 1
+    texture.close()
+    return normal_triangles
 
 def min_axe(axe,triangles) :
     min_value = min(triangles[axe::3])
@@ -349,36 +405,9 @@ if __name__ == "__main__":
     try:
         delta_x = float(delta_X)
         delta_x = delta_x/1000 # LA VALEUR EN [mm]
-        stl_raw_data = stl(texture_file)
-        # Suppression des '\n'
-        for l in range(len(stl_raw_data)) :
-            stl_raw_data[l] = stl_raw_data[l].replace('\n','')
-        # Nombre de triangle : première ligne
-        nb_triangles = int(stl_raw_data[0])
-        # Coordonné des triangles : A(xyz) B(xyz) C(xyz) ligne 3 5 7 9
-        triangles = list()
-        for i in range(nb_triangles) :
-            triangles.extend(list(stl_raw_data[2+2*i]))
-        for k in range(len(triangles)) :
-            triangles[k] = int(triangles[k])
-        # Normales des triangles : Nx Ny Nz ligne 2 4 6 8
-        normal_triangles = list()
-        for i in range(nb_triangles) :
-            normal_triangles.extend(list(stl_raw_data[1+2*i]))
-        count_ = 0
-        for k in range(len(normal_triangles)) :
-            if normal_triangles[k] == '-' :
-                normal_triangles[k+1] = '-1'
-                count_ += 1
-        for l in range(count_) :
-            normal_triangles.remove("-")
-        for f in range(len(normal_triangles)) :
-            normal_triangles[f] = int(normal_triangles[f])
-        #PRINT TEST
-        #print(stl_raw_data)
-        #print(nb_triangles)
-        #print(triangles)
-        #print(normal_triangles)
+        nb_triangles = stl_nb(texture_file)
+        triangles = stl_analysis(texture_file)
+        normal_triangles = stl_normal(texture_file)
 
     except ValueError :
         print('WARNING : Le programme attend une chaine de caractères pour le nom du fichier STL et un nombre pour le pas.')
