@@ -7,6 +7,7 @@ import struct
 import argparse as ag
 import math
 import time
+import matplotlib.pyplot as plt
 
 ###### DEFINITION FONCTIONS ######
 # ARGUMENTS
@@ -341,6 +342,7 @@ if __name__ == "__main__":
     args = arguments()
     texture_file = args.STL_file
     delta_X = args.Space_step # LA VALEUR EN [µm]
+    name = extract_name(texture_file)
 
     time_try1 = time.time()
     ###### DATA EXTRACTION ######
@@ -459,12 +461,16 @@ if __name__ == "__main__":
         print('Temps discrétisation : {} secondes'.format(time.time()-time_try2))
         print('** Ecriture en cours **')     
     finally:
+        ind = int(indice_z/2)
+        arr = M3D[ind]
+        plt.imshow(arr)
+        plt.show()
         pass
 
     time_try3 = time.time()
     ###### DATA FILES WRITING ######
     try:
-        name = extract_name(texture_file)
+        #name = extract_name(texture_file)
         # CREATION FICHIER DAT
         new_data = open('data_texture\{}_X{}.dat'.format(name, delta_X),'w') # il a un soucis avec le "\"
         new_data.write('Space step [µm]:'+'\n')
