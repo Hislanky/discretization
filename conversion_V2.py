@@ -492,8 +492,8 @@ if __name__ == "__main__":
     finally:
         
         arr_tmp = M3D.transpose(1,2,0)
-        ind = int(M3D.shape[2]/2)
-        arr = M3D[:,:,ind]
+        ind = int(M3D.shape[1]/2)
+        arr = M3D[:,ind,:]
         plt.imshow(arr)
         plt.show()
 
