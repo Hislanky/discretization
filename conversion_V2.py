@@ -393,6 +393,22 @@ def extern_node(matrix, i_x, i_y, i_z, min_x, min_y, min_z, pas) :
                         Node.append([X,Y,Z])
     return Node
 
+# DETERMINE 8 DOT COORDINATE FOR EXTERNAL DOT
+def dot_for_cell(node, d_x):
+    x = node[0]
+    y = node[1]
+    z = node[2]
+    p1 = [x-d_x,y-d_x,z-d_x]
+    p2 = [x+d_x,y-d_x,z-d_x]
+    p3 = [x+d_x,y+d_x,z-d_x]
+    p4 = [x-d_x,y+d_x,z-d_x]
+    p5 = [x-d_x,y-d_x,z+d_x]
+    p6 = [x+d_x,y-d_x,z+d_x]
+    p7 = [x+d_x,y+d_x,z+d_x]
+    p8 = [x-d_x,y+d_x,z+d_x]
+    p_cell = [p1, p2, p3, p4, p5, p6, p7, p8]
+    return p_cell
+ 
 ###### MAIN PROGRAM ######
 if __name__ == "__main__":
     args = arguments()
@@ -531,10 +547,30 @@ if __name__ == "__main__":
         nb_extern_dot = 8*nb_ext_node
         vtk_data.write('POINTS {} float'.format(nb_extern_dot)+'\n')
         ##Boucle pour ecrite les 8 point pour chaque noeud (probablement dans une autre fonction)
+        for i in range(nb_ext_node) :
+            dot_c = dot_for_cell(Node_ext[i], delta_x)
+            #write des 8 point
+            for j in range(8) :
+                x_ = dot_c[j][0]
+                y_ = dot_c[j][1]
+                z_ = dot_c[j][2]
+                vtk_data.write('{} {} {}'.format(x_,y_,z_)+'\n')
+        ##fin boucle
         vtk_data.write('\n')
         nb_data_cell = 9*nb_ext_node
         vtk_data.write('CELLS {} {}'.format(nb_ext_node,nb_data_cell)+'\n')
         ##Boucle pour ecirte des points pour la cellule
+        for i in range(nb_ext_node) :
+            point0 = 0 + 8*i
+            point1 = 1 + 8*i
+            point2 = 2 + 8*i
+            point3 = 3 + 8*i
+            point4 = 4 + 8*i
+            point5 = 5 + 8*i
+            point6 = 6 + 8*i
+            point7 = 7 + 8*i
+            vtk_data.write('8 {} {} {} {} {} {} {} {}'.format(point0,point1,point2,point3,point4,point5,point6,point7)+'\n')
+        ##fin boucle
         vtk_data.write('\n')
         vtk_data.write('CELL_TYPES {}'.format(nb_ext_node)+'\n')
         for i in range(nb_ext_node) :
