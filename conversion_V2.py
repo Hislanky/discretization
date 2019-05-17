@@ -491,11 +491,11 @@ if __name__ == "__main__":
         print('** Ecriture en cours **')     
     finally:
         
-        arr_tmp = M3D.transpose(1,2,0)
-        ind = int(M3D.shape[1]/2)
-        arr = M3D[:,ind,:]
-        plt.imshow(arr)
-        plt.show()
+        #arr_tmp = M3D.transpose(1,2,0)
+        #ind = int(M3D.shape[1]/2)
+        #arr = M3D[:,ind,:]
+        #plt.imshow(arr)
+        #plt.show()
 
         pass
 
@@ -515,13 +515,30 @@ if __name__ == "__main__":
             new_data.write('{}'.format(flat_M3D[i]))
         new_data.close()
         print('Ecriture fichier .dat : TERMINER')
+
         # CREATION FICHIER VTK (POUR VISUALISATION PARAVIEW)
         # Détermination des noeud de la peau extérieure
         # problème avec node_ext
-        #Node_ext = extern_node(M3D, indice_x, indice_y, indice_z, min_x, min_y, min_z, delta_x)
-        #print(Node_ext[1][1])
+        Node_ext = extern_node(M3D, indice_x, indice_y, indice_z, min_x, min_y, min_z, delta_x)
         vtk_data = open('data_texture\{}_X{}.vtk'.format(name, delta_X),'w') # il a un soucis avec le "\"
         # ecrire le fichier vtk pour qu'il soit lisible par paraview
+        vtk_data.write('# vtk DataFile Version 3.0 \n')
+        vtk_data.write('{}_X{}'.format(name, delta_X)+'\n')
+        vtk_data.write('ASCII \n')
+        vtk_data.write('\n')
+        vtk_data.write('DATASET UNSTRUCTURED_GRID \n')
+        nb_ext_node = len(Node_ext)
+        nb_extern_dot = 8*nb_ext_node
+        vtk_data.write('POINTS {} float'.format(nb_extern_dot)+'\n')
+        ##Boucle pour ecrite les 8 point pour chaque noeud (probablement dans une autre fonction)
+        vtk_data.write('\n')
+        nb_data_cell = 9*nb_ext_node
+        vtk_data.write('CELLS {} {}'.format(nb_ext_node,nb_data_cell)+'\n')
+        ##Boucle pour ecirte des points pour la cellule
+        vtk_data.write('\n')
+        vtk_data.write('CELL_TYPES {}'.format(nb_ext_node)+'\n')
+        for i in range(nb_ext_node) :
+            vtk_data.write('12 \n')
         vtk_data.close()
         print('Ecriture fichier .vtk : TERMINER')
     except :
